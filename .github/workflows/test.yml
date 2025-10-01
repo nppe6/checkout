@@ -267,7 +267,6 @@ jobs:
         uses: actions/checkout@v4.1.6
         with:
           path: localClone
-          container: alpine/git:latest
 
       # Basic checkout using git
       - name: Checkout basic
