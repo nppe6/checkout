@@ -7,11 +7,6 @@ on:
       - main
       - releases/*
 
-
-# Note that when you see patterns like "ref: test-data/v2/basic" within this workflow,
-# these refer to "test-data" branches on this actions/checkout repo.
-# (For example, test-data/v2/basic -> https://github.com/actions/checkout/tree/test-data/v2/basic)
-
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -35,11 +30,9 @@ jobs:
     runs-on: ${{ matrix.runs-on }}
 
     steps:
-      # Clone this repo
       - name: Checkout
         uses: actions/checkout@v4.1.6
 
-      # Basic checkout
       - name: Checkout basic
         uses: ./
         with:
@@ -49,7 +42,6 @@ jobs:
         shell: bash
         run: __test__/verify-basic.sh
 
-      # Clean
       - name: Modify work tree
         shell: bash
         run: __test__/modify-work-tree.sh
@@ -62,7 +54,6 @@ jobs:
         shell: bash
         run: __test__/verify-clean.sh
 
-      # Side by side
       - name: Checkout side by side 1
         uses: ./
         with:
@@ -77,17 +68,14 @@ jobs:
         shell: bash
         run: __test__/verify-side-by-side.sh
 
-      # Filter
       - name: Fetch filter
         uses: ./
         with:
           filter: 'blob:none'
           path: fetch-filter
-
       - name: Verify fetch filter
         run: __test__/verify-fetch-filter.sh
 
-      # Sparse checkout
       - name: Sparse checkout
         uses: ./
         with:
@@ -96,21 +84,17 @@ jobs:
             .github
             dist
           path: sparse-checkout
-
       - name: Verify sparse checkout
         run: __test__/verify-sparse-checkout.sh
 
-      # Disabled sparse checkout in existing checkout
       - name: Disabled sparse checkout
         uses: ./
         with:
           path: sparse-checkout
-
       - name: Verify disabled sparse checkout
         shell: bash
         run: set -x && ls -l sparse-checkout/src/git-command-manager.ts
 
-      # Sparse checkout (non-cone mode)
       - name: Sparse checkout (non-cone mode)
         uses: ./
         with:
@@ -120,15 +104,13 @@ jobs:
             /dist/
           sparse-checkout-cone-mode: false
           path: sparse-checkout-non-cone-mode
-
       - name: Verify sparse checkout (non-cone mode)
         run: __test__/verify-sparse-checkout-non-cone-mode.sh
 
-      # LFS
       - name: Checkout LFS
         uses: ./
         with:
-          repository: actions/checkout # hardcoded, otherwise doesn't work from a fork
+          repository: actions/checkout
           ref: test-data/v2/lfs
           path: lfs
           lfs: true
@@ -136,7 +118,6 @@ jobs:
         shell: bash
         run: __test__/verify-lfs.sh
 
-      # Submodules false
       - name: Checkout submodules false
         uses: ./
         with:
@@ -145,7 +126,6 @@ jobs:
       - name: Verify submodules false
         run: __test__/verify-submodules-false.sh
 
-      # Submodules one level
       - name: Checkout submodules true
         uses: ./
         with:
@@ -155,7 +135,6 @@ jobs:
       - name: Verify submodules true
         run: __test__/verify-submodules-true.sh
 
-      # Submodules recursive
       - name: Checkout submodules recursive
         uses: ./
         with:
@@ -165,7 +144,6 @@ jobs:
       - name: Verify submodules recursive
         run: __test__/verify-submodules-recursive.sh
 
-      # Basic checkout using REST API
       - name: Remove basic
         if: runner.os != 'windows'
         run: rm -rf basic
@@ -200,11 +178,8 @@ jobs:
     env:
       https_proxy: http://squid-proxy:3128
     steps:
-      # Clone this repo
       - name: Checkout
         uses: actions/checkout@v4.1.6
-
-      # Basic checkout using git
       - name: Checkout basic
         uses: ./
         with:
@@ -212,8 +187,6 @@ jobs:
           path: basic
       - name: Verify basic
         run: __test__/verify-basic.sh
-
-      # Basic checkout using REST API
       - name: Remove basic
         run: rm -rf basic
       - name: Override git version
@@ -232,11 +205,8 @@ jobs:
       https_proxy: http://no-such-proxy:3128
       no_proxy: api.github.com,github.com
     steps:
-      # Clone this repo
       - name: Checkout
         uses: actions/checkout@v4.1.6
-
-      # Basic checkout using git
       - name: Checkout basic
         uses: ./
         with:
@@ -246,8 +216,6 @@ jobs:
         run: __test__/verify-basic.sh
       - name: Remove basic
         run: rm -rf basic
-
-      # Basic checkout using REST API
       - name: Override git version
         run: __test__/override-git-version.sh
       - name: Checkout basic using REST API
@@ -261,8 +229,14 @@ jobs:
   test-git-container:
     runs-on: ubuntu-latest
     container:
-      image: bitnami/git:2.50.0   # 用一个你确认能拉的版本
+      image: ubuntu:24.04   # 改用基础镜像，避免 Bitnami 镜像不可用问题
     steps:
+      - name: 安装 git
+        run: |
+          apt-get update
+          apt-get install -y git
+          git --version
+
       - name: Checkout
         uses: actions/checkout@v4.1.6
         with:
@@ -272,11 +246,12 @@ jobs:
         uses: ./localClone
         with:
           ref: test-data/v2/basic
+
       - name: Verify basic
         run: |
           if [ ! -f "./basic-file.txt" ]; then
-            echo "Expected basic file does not exist"
-            exit 1
+              echo "Expected basic file does not exist"
+              exit 1
           fi
           if [ ! -d "./.git" ]; then
             echo "Expected ./.git folder to exist"
@@ -293,18 +268,13 @@ jobs:
   test-output:
     runs-on: ubuntu-latest
     steps:
-      # Clone this repo
       - name: Checkout
         uses: actions/checkout@v4.1.6
-
-      # Basic checkout using git
       - name: Checkout basic
         id: checkout
         uses: ./
         with:
           ref: test-data/v2/basic
-
-      # Verify output
       - name: Verify output
         run: |
           echo "Commit: ${{ steps.checkout.outputs.commit }}"
@@ -319,7 +289,5 @@ jobs:
             echo "Expected commit to be 82f71901cf8c021332310dcc8cdba84c4193ff5d"
             exit 1
           fi
-
-      # needed to make checkout post cleanup succeed
       - name: Fix Checkout
         uses: actions/checkout@v4.1.6
