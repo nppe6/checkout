@@ -260,9 +260,10 @@ jobs:
 
   test-git-container:
     runs-on: ubuntu-latest
-    container: bitnami/git:latest
+    # 这里把 container image 换成一个有 tag 的版本
+    container:
+      image: bitnami/git:2.36.0-debian-10-r14
     steps:
-      # Clone this repo
       - name: Checkout
         uses: actions/checkout@v4.1.6
         with:
