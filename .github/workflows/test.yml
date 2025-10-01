@@ -260,16 +260,14 @@ jobs:
 
   test-git-container:
     runs-on: ubuntu-latest
-    # 这里把 container image 换成一个有 tag 的版本
     container:
-      image: bitnami/git:2.36.0-debian-10-r14
+      image: bitnami/git:2.50.0   # 用一个你确认能拉的版本
     steps:
       - name: Checkout
         uses: actions/checkout@v4.1.6
         with:
           path: localClone
 
-      # Basic checkout using git
       - name: Checkout basic
         uses: ./localClone
         with:
@@ -277,21 +275,16 @@ jobs:
       - name: Verify basic
         run: |
           if [ ! -f "./basic-file.txt" ]; then
-              echo "Expected basic file does not exist"
-              exit 1
+            echo "Expected basic file does not exist"
+            exit 1
           fi
-
-          # Verify .git folder
           if [ ! -d "./.git" ]; then
             echo "Expected ./.git folder to exist"
             exit 1
           fi
-
-          # Verify auth token
           git config --global --add safe.directory "*"
           git fetch --no-tags --depth=1 origin +refs/heads/main:refs/remotes/origin/main
 
-      # needed to make checkout post cleanup succeed
       - name: Fix Checkout v4
         uses: actions/checkout@v4.1.6
         with:
